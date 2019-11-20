@@ -27,7 +27,7 @@ var points = [];
 ['touchend', 'touchleave', 'mouseup'].forEach(function (ev) {
     canvas.addEventListener(ev, function (e) {
         isMousedown = false
-        drawPath(points, context);
+        drawPathAnimation(points, context);
     })
 });
 
@@ -47,5 +47,23 @@ function drawPath(points, context) {
         var endPoint = points[i - 1];
         drawLine(context, startPoint, endPoint)
     }
+}
+
+
+function drawPathAnimation(points, context, animationInterval) {
+    // iterates through an array of points and draws an animation of the complete path
+    let i = 1;
+    let drawInterval = setInterval(() => {
+        if(i >= points.length) {
+            clearInterval(drawInterval)
+            return;
+        }
+
+        var startPoint = points[i];
+        var endPoint = points[i - 1];
+        drawLine(context, startPoint, endPoint)
+
+        i++;
+    }, animationInterval || 30);
 }
 
