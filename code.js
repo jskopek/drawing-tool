@@ -11,11 +11,18 @@ var isMousedown = false;
     });
 });
 
+var points = [];
 ['touchmove', 'mousemove'].forEach(function (ev) {
     canvas.addEventListener(ev, function (e) {
         if (!isMousedown) return
 
-        context.lineTo(e.pageX, e.pageY);
+        var point = {
+            x: e.pageX,
+            y: e.pageY
+        }
+        points.push(point);
+
+        context.lineTo(point.x, point.y);
         context.stroke()
     })
 });
