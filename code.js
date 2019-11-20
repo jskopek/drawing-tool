@@ -21,15 +21,31 @@ var points = [];
             y: e.pageY
         }
         points.push(point);
-
-        context.lineTo(point.x, point.y);
-        context.stroke()
     })
 });
 
 ['touchend', 'touchleave', 'mouseup'].forEach(function (ev) {
     canvas.addEventListener(ev, function (e) {
         isMousedown = false
+        drawPath(points, context);
     })
 });
+
+
+function drawLine(context, startPoint, endPoint) {
+    // draws a straight line between two points
+    context.beginPath()
+    context.moveTo(endPoint.x, endPoint.y);
+    context.lineTo(startPoint.x, startPoint.y);
+    context.stroke()
+}
+
+function drawPath(points, context) {
+    // iterates through an array of points and draws the complete path
+    for(var i = 1; i <= points.length; i++) {
+        var startPoint = points[i];
+        var endPoint = points[i - 1];
+        drawLine(context, startPoint, endPoint)
+    }
+}
 
