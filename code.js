@@ -1,35 +1,61 @@
-var canvas = document.querySelector('canvas');
-var context = canvas.getContext('2d');
+// FUNCTIONS
+function getCursorCoords(e) {
+    // takes a touch event and returns a dictionary of {x, y} values
+    var touchEvt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    return {
+        x: parseInt(touchEvt.pageX),
+        y: parseInt(touchEvt.pageY)
+    }
+}
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function monitorDrawEvents(canvas, userCallbacks) {
+    // monitors any draw events on the canvas
+    // a draw event is when a cursor is moved while the mouse is pressed
+    // optional callbacks:
+    //  - onUpdate(startPoint, endPoint): returns a starting and ending point dict, which contain x & y values, when a pressed cursor is moved
+    //  - onComplete(points): returns an array of points that make up a complete path when the cursor is released
+    let callbacks = Object.assign({
+        onUpdate: (startPoint, endPoint) => {},
+        onComplete: (points) => {}
+    }, userCallbacks);
 
-var isMousedown = false;
-['touchstart', 'mousedown'].forEach(function (ev) {
-    canvas.addEventListener(ev, function (e) {
-        isMousedown = true
+    var isMousedown = false;
+    var points = [];
+    var point;
+
+
+    ['touchstart', 'mousedown'].forEach((eventName) => {
+        canvas.addEventListener(eventName, function (e) {
+            isMousedown = true
+        })
     });
-});
 
-var points = [];
-['touchmove', 'mousemove'].forEach(function (ev) {
-    canvas.addEventListener(ev, function (e) {
-        if (!isMousedown) return
+    ['touchmove', 'mousemove'].forEach((eventName) => {
+        canvas.addEventListener(eventName, function (e) {
+            if (!isMousedown) return
 
-        var point = {
-            x: e.pageX,
-            y: e.pageY
-        }
-        points.push(point);
-    })
-});
+            e.preventDefault()
 
-['touchend', 'touchleave', 'mouseup'].forEach(function (ev) {
-    canvas.addEventListener(ev, function (e) {
-        isMousedown = false
-        drawPathAnimation(points, context);
-    })
-});
+            var newPoint = getCursorCoords(e)
+            points.push(newPoint)
+
+            callbacks.onUpdate(point, newPoint)
+
+            point = newPoint
+        })
+    });
+
+    ['touchend', 'touchleave', 'mouseup'].forEach((eventName) => {
+        canvas.addEventListener(eventName, function (e) {
+            isMousedown = false
+
+            callbacks.onComplete(points)
+
+            points = []
+            point = undefined;
+        })
+    });
+}
 
 
 function drawLine(context, startPoint, endPoint) {
@@ -66,4 +92,18 @@ function drawPathAnimation(points, context, animationInterval) {
         i++;
     }, animationInterval || 30);
 }
+// /FUNCTIONS
 
+
+// APPLICATION CODE
+var canvas = document.querySelector('canvas');
+var context = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+monitorDrawEvents(canvas, {
+    onComplete: (points) => {
+        drawPathAnimation(points, context);
+    }
+});
